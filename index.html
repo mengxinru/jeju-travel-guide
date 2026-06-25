@@ -1,0 +1,1299 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>济州岛自由行最终攻略</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <style>
+    :root {
+      --ink: #1c2733;
+      --muted: #63717f;
+      --paper: #fffdf8;
+      --bg: #f3f6f2;
+      --line: #d9e1d8;
+      --green: #1f765d;
+      --green-dark: #145942;
+      --sea: #236b90;
+      --sun: #f2b84b;
+      --sand: #efe4ca;
+      --tile: #ffffff;
+      --danger: #9a4c17;
+      --shadow: 0 18px 45px rgba(31, 47, 38, 0.12);
+      --radius: 8px;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+      background: var(--bg);
+      color: var(--ink);
+      line-height: 1.68;
+    }
+    a { color: var(--sea); }
+    .site-header {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      background: rgba(255, 253, 248, 0.96);
+      border-bottom: 1px solid var(--line);
+      backdrop-filter: blur(12px);
+    }
+    .nav {
+      max-width: 1180px;
+      margin: 0 auto;
+      min-height: 62px;
+      padding: 10px 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+    }
+    .brand {
+      min-width: 210px;
+      font-weight: 800;
+      font-size: 18px;
+      color: var(--green-dark);
+      letter-spacing: 0;
+    }
+    .nav-links {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .nav-links a {
+      color: var(--ink);
+      text-decoration: none;
+      font-size: 13px;
+      padding: 7px 9px;
+      border-radius: 6px;
+    }
+    .nav-links a:hover { background: #e9efe7; }
+    .tools { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+    button {
+      border: 1px solid var(--line);
+      background: #fff;
+      color: var(--ink);
+      border-radius: 6px;
+      padding: 8px 10px;
+      font-size: 13px;
+      cursor: pointer;
+    }
+    button.primary { background: var(--green); border-color: var(--green); color: #fff; }
+    button.primary:hover { background: var(--green-dark); }
+    button:hover { border-color: #98aaa0; }
+    .hero {
+      min-height: 470px;
+      display: flex;
+      align-items: end;
+      color: #fff;
+      background:
+        linear-gradient(180deg, rgba(10, 31, 42, 0.25), rgba(10, 31, 42, 0.78)),
+        url("https://images.unsplash.com/photo-1590766940554-634a7ed41450?auto=format&fit=crop&w=1800&q=80") center/cover;
+    }
+    .hero-inner {
+      width: 100%;
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 78px 18px 54px;
+    }
+    .hero h1 {
+      max-width: 780px;
+      font-size: 48px;
+      line-height: 1.12;
+      margin: 0 0 16px;
+      letter-spacing: 0;
+    }
+    .hero p { max-width: 780px; margin: 0 0 20px; font-size: 18px; color: rgba(255,255,255,0.92); }
+    .badges { display: flex; gap: 10px; flex-wrap: wrap; }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      min-height: 34px;
+      padding: 7px 10px;
+      border: 1px solid rgba(255,255,255,0.36);
+      border-radius: 6px;
+      background: rgba(255,255,255,0.14);
+      color: #fff;
+      font-size: 14px;
+    }
+    .overview {
+      max-width: 1180px;
+      margin: -28px auto 28px;
+      padding: 0 18px;
+      position: relative;
+      z-index: 3;
+    }
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 12px;
+    }
+    .day-card {
+      background: var(--tile);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 14px;
+      min-height: 128px;
+    }
+    .day-card .date { color: var(--muted); font-size: 13px; }
+    .day-card h3 { margin: 5px 0 6px; font-size: 17px; color: var(--green-dark); }
+    .day-card p { margin: 0; color: var(--muted); font-size: 13px; }
+    .planner-section {
+      max-width: 1180px;
+      margin: 0 auto 28px;
+      padding: 0 18px;
+    }
+    .planner-shell {
+      background: var(--tile);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+    .planner-head {
+      padding: 18px;
+      display: flex;
+      justify-content: space-between;
+      gap: 18px;
+      align-items: flex-start;
+      border-bottom: 1px solid var(--line);
+      background: #fbfcfa;
+    }
+    .planner-head h2 {
+      margin: 0;
+      color: var(--green-dark);
+      font-size: 23px;
+      line-height: 1.25;
+    }
+    .planner-head p {
+      margin: 5px 0 0;
+      color: var(--muted);
+      font-size: 14px;
+    }
+    .day-tabs {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+    .day-tabs button.active {
+      background: var(--green);
+      color: #fff;
+      border-color: var(--green);
+    }
+    .planner-body {
+      display: grid;
+      grid-template-columns: 300px minmax(0, 1fr);
+      min-height: 420px;
+    }
+    .day-summary {
+      padding: 18px;
+      border-right: 1px solid var(--line);
+      background: #fffdf8;
+    }
+    .day-summary .kicker {
+      color: var(--muted);
+      font-size: 13px;
+      margin-bottom: 4px;
+    }
+    .day-summary h3 {
+      margin: 0 0 10px;
+      color: var(--green-dark);
+      font-size: 22px;
+    }
+    .summary-grid {
+      display: grid;
+      gap: 10px;
+      margin-top: 14px;
+    }
+    .summary-row {
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      padding: 10px;
+      background: #fff;
+    }
+    .summary-row span {
+      display: block;
+      color: var(--muted);
+      font-size: 12px;
+    }
+    .summary-row strong {
+      display: block;
+      margin-top: 2px;
+      font-size: 14px;
+    }
+    .timeline {
+      padding: 18px;
+      display: grid;
+      gap: 12px;
+    }
+    .timeline-item {
+      display: grid;
+      grid-template-columns: 74px minmax(0, 1fr);
+      gap: 12px;
+      align-items: start;
+    }
+    .timeline-time {
+      color: var(--green-dark);
+      font-weight: 800;
+      font-size: 14px;
+      padding-top: 10px;
+    }
+    .timeline-card {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 12px;
+      background: #fff;
+    }
+    .timeline-card h4 {
+      margin: 0 0 6px;
+      font-size: 16px;
+      color: #20303a;
+    }
+    .timeline-card p {
+      margin: 0 0 8px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+    .tag-row {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      min-height: 24px;
+      padding: 3px 7px;
+      border-radius: 5px;
+      background: #eaf0e7;
+      color: #315446;
+      font-size: 12px;
+    }
+    .map-section {
+      max-width: 1180px;
+      margin: 0 auto 28px;
+      padding: 0 18px;
+    }
+    .map-shell {
+      background: var(--tile);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+    .map-head {
+      padding: 18px 18px 12px;
+      display: flex;
+      justify-content: space-between;
+      gap: 18px;
+      align-items: flex-start;
+      border-bottom: 1px solid var(--line);
+    }
+    .map-head h2 {
+      margin: 0;
+      color: var(--green-dark);
+      font-size: 23px;
+      line-height: 1.25;
+    }
+    .map-head p {
+      margin: 5px 0 0;
+      color: var(--muted);
+      font-size: 14px;
+    }
+    .route-tabs {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+    .route-tabs button.active {
+      background: var(--green);
+      color: #fff;
+      border-color: var(--green);
+    }
+    .map-body {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 320px;
+      min-height: 520px;
+    }
+    #jejuMap {
+      min-height: 520px;
+      background: #eef3f7;
+    }
+    .static-map {
+      width: 100%;
+      min-height: 520px;
+      background: #edf3f8;
+      display: block;
+    }
+    .static-map text {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+      font-size: 12px;
+      fill: #24313d;
+      paint-order: stroke;
+      stroke: rgba(255,255,255,0.96);
+      stroke-width: 5px;
+      stroke-linejoin: round;
+    }
+    .static-map .island {
+      fill: #f4f7f1;
+      stroke: #b8c7d4;
+      stroke-width: 2;
+    }
+    .static-map .coast-water {
+      fill: #b8ddf1;
+      opacity: 0.72;
+    }
+    .static-map .minor-road {
+      fill: none;
+      stroke: #b7c2cd;
+      stroke-width: 2;
+      stroke-linecap: round;
+      opacity: 0.72;
+    }
+    .static-map .route-line {
+      fill: none;
+      stroke: #5d51df;
+      stroke-width: 8;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      opacity: 0.96;
+      filter: drop-shadow(0 2px 2px rgba(58, 46, 150, 0.28));
+    }
+    .static-map .route-line.secondary {
+      opacity: 0.34;
+      stroke-width: 5;
+    }
+    .static-map .number-point {
+      fill: #5d51df;
+      stroke: #fff;
+      stroke-width: 3;
+      filter: drop-shadow(0 3px 5px rgba(25, 39, 52, 0.25));
+    }
+    .static-map .number-text {
+      fill: #fff;
+      stroke: none;
+      font-size: 12px;
+      font-weight: 900;
+      text-anchor: middle;
+      dominant-baseline: central;
+      paint-order: normal;
+    }
+    .static-map .route-label-bg {
+      fill: rgba(255,255,255,0.9);
+      stroke: rgba(231, 72, 99, 0.18);
+      stroke-width: 1;
+    }
+    .static-map .route-label {
+      font-size: 13px;
+      font-weight: 700;
+      fill: #e54863;
+      stroke: none;
+      paint-order: normal;
+    }
+    .static-map .map-title {
+      font-size: 24px;
+      font-weight: 900;
+      fill: #ffe45c;
+      stroke: #17202a;
+      stroke-width: 5px;
+      paint-order: stroke;
+    }
+    .static-map .map-subtitle {
+      font-size: 13px;
+      font-weight: 700;
+      fill: #536473;
+      stroke: rgba(255,255,255,0.9);
+      stroke-width: 3px;
+    }
+    .map-leg-label {
+      border: 1px solid rgba(231, 72, 99, 0.2);
+      border-radius: 6px;
+      background: rgba(255,255,255,0.92);
+      box-shadow: 0 5px 14px rgba(25, 39, 52, 0.16);
+      color: #e54863;
+      font-size: 12px;
+      font-weight: 800;
+      line-height: 1.3;
+      padding: 5px 8px;
+      white-space: nowrap;
+    }
+    .map-number-marker {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      white-space: nowrap;
+      filter: drop-shadow(0 4px 9px rgba(25, 39, 52, 0.18));
+    }
+    .map-number-dot {
+      width: 22px;
+      height: 22px;
+      border: 2px solid #fff;
+      border-radius: 50%;
+      background: #5d51df;
+      color: #fff;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 900;
+      line-height: 1;
+    }
+    .map-place-name {
+      padding: 3px 7px;
+      border: 1px solid rgba(65, 74, 91, 0.12);
+      border-radius: 6px;
+      background: rgba(255,255,255,0.9);
+      color: #24313d;
+      font-size: 12px;
+      font-weight: 800;
+      line-height: 1.2;
+    }
+    .leaflet-container {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+    }
+    .place-panel {
+      border-left: 1px solid var(--line);
+      padding: 14px;
+      overflow: auto;
+      max-height: 520px;
+    }
+    .place-panel h3 {
+      margin: 0 0 10px;
+      color: var(--green-dark);
+      font-size: 17px;
+    }
+    .place-item {
+      border-top: 1px solid #edf1ea;
+      padding: 11px 0;
+    }
+    .place-item:first-of-type { border-top: 0; }
+    .place-name { font-weight: 700; margin-bottom: 3px; }
+    .place-meta { color: var(--muted); font-size: 13px; margin-bottom: 6px; }
+    .place-links { display: flex; gap: 10px; flex-wrap: wrap; }
+    .place-links a { font-size: 12px; text-decoration: none; }
+    .map-fallback {
+      display: none;
+      padding: 12px 14px;
+      border-top: 1px solid var(--line);
+      background: #fff7e7;
+      color: var(--danger);
+      font-size: 13px;
+    }
+    .content {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 8px 18px 58px;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 260px;
+      gap: 22px;
+      align-items: start;
+    }
+    .guide {
+      background: var(--paper);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 26px;
+    }
+    .guide > h1 { display: none; }
+    .guide-section {
+      padding: 24px 0;
+      border-top: 1px solid var(--line);
+    }
+    .guide-section.first-section { border-top: 0; padding-top: 0; }
+    .guide h2 {
+      font-size: 25px;
+      line-height: 1.25;
+      margin: 0 0 14px;
+      color: var(--green-dark);
+      letter-spacing: 0;
+    }
+    .guide h3 {
+      font-size: 18px;
+      margin: 22px 0 10px;
+      color: #243a47;
+    }
+    .guide p { margin: 9px 0; }
+    .guide ul { margin: 8px 0 18px; padding-left: 1.25em; }
+    .guide li { margin: 5px 0; }
+    .guide code { background: #eaf0e7; padding: 1px 5px; border-radius: 4px; }
+    .table-scroll { overflow-x: auto; margin: 14px 0 22px; }
+    table { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 620px; }
+    th, td { border: 1px solid var(--line); padding: 10px 11px; vertical-align: top; }
+    th { background: var(--sand); text-align: left; }
+    .side-panel {
+      position: sticky;
+      top: 82px;
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 16px;
+    }
+    .side-panel h2 { margin: 0 0 10px; font-size: 17px; color: var(--green-dark); }
+    .side-panel a {
+      display: block;
+      padding: 7px 0;
+      border-top: 1px solid #eef2ec;
+      color: var(--ink);
+      text-decoration: none;
+      font-size: 13px;
+    }
+    .side-panel a:first-of-type { border-top: 0; }
+    .side-panel a:hover { color: var(--green); }
+    [contenteditable="true"] {
+      outline: 2px dashed rgba(31,118,93,0.35);
+      outline-offset: 6px;
+      background: rgba(255,255,255,0.7);
+    }
+    .edit-note {
+      position: fixed;
+      left: 18px;
+      bottom: 18px;
+      max-width: 380px;
+      background: #173f34;
+      color: #fff;
+      padding: 10px 12px;
+      border-radius: 6px;
+      box-shadow: var(--shadow);
+      font-size: 13px;
+      display: none;
+      z-index: 40;
+    }
+    .edit-note.show { display: block; }
+    @media (max-width: 1040px) {
+      .cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .planner-body { grid-template-columns: 1fr; }
+      .day-summary { border-right: 0; border-bottom: 1px solid var(--line); }
+      .map-body { grid-template-columns: 1fr; }
+      .place-panel { border-left: 0; border-top: 1px solid var(--line); max-height: none; }
+      .content { grid-template-columns: 1fr; }
+      .side-panel { position: static; }
+      .hero h1 { font-size: 38px; }
+    }
+    @media (max-width: 680px) {
+      .nav { align-items: flex-start; flex-direction: column; }
+      .nav-links { justify-content: flex-start; }
+      .tools { justify-content: flex-start; }
+      .hero { min-height: 430px; }
+      .hero h1 { font-size: 31px; }
+      .hero p { font-size: 16px; }
+      .cards { grid-template-columns: 1fr; }
+      .guide { padding: 18px; }
+    }
+    @media print {
+      .site-header, .side-panel, .edit-note { display: none !important; }
+      .hero { min-height: auto; color: var(--ink); background: #fff; border-bottom: 1px solid var(--line); }
+      .hero p, .badge { color: var(--ink); }
+      .badge { border-color: var(--line); background: #fff; }
+      .overview { margin: 16px 0; padding: 0; }
+      .content { display: block; padding: 0; }
+      .guide { border: 0; box-shadow: none; padding: 0; }
+      .day-card { box-shadow: none; }
+      a { color: var(--ink); text-decoration: none; }
+    }
+  </style>
+</head>
+<body>
+  <header class="site-header">
+    <nav class="nav">
+      <div class="brand">Jeju Travel Plan</div>
+      <div class="nav-links">
+        <a href="#overview">总览</a>
+        <a href="#planner">日程</a>
+        <a href="#map">地图</a>
+        <a href="#guide">攻略</a>
+        <a href="#east">东线</a>
+        <a href="#west">西线</a>
+        <a href="#shopping">购物</a>
+        <a href="#tips">避坑</a>
+      </div>
+      <div class="tools">
+        <button class="primary" id="editBtn" type="button">编辑页面</button>
+        <button id="saveBtn" type="button">保存</button>
+        <button id="downloadMdBtn" type="button">下载 Markdown</button>
+        <button id="resetBtn" type="button">恢复</button>
+        <button id="printBtn" type="button">打印/PDF</button>
+      </div>
+    </nav>
+  </header>
+
+  <section class="hero">
+    <div class="hero-inner editable" id="heroContent">
+      <h1>济州岛自由行最终攻略</h1>
+      <p>6 月 29 日抵达，7 月 3 日返程。三天完整游玩：东线牛岛、西线海岸、济州市购物。</p>
+      <div class="badges">
+        <span class="badge">2 人同行</span>
+        <span class="badge">不自驾</span>
+        <span class="badge">公交 + 打车</span>
+        <span class="badge">住新济州/保健路</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="overview" id="overview">
+    <div class="cards editable" id="cardsContent">
+      <article class="day-card"><div class="date">6/29 周一</div><h3>抵达</h3><p>机场、酒店、保健路轻逛。</p></article>
+      <article class="day-card"><div class="date">6/30 周二</div><h3>东线</h3><p>方案 A 牛岛骑行；方案 B 咸德月汀里。</p></article>
+      <article class="day-card"><div class="date">7/1 周三</div><h3>西线</h3><p>202 路、汉谭洞海岸步道、挟才海水浴场。</p></article>
+      <article class="day-card"><div class="date">7/2 周四</div><h3>购物</h3><p>七星街、东门市场、保健路。</p></article>
+      <article class="day-card"><div class="date">7/3 周五</div><h3>返程</h3><p>机场值机、出境、回程。</p></article>
+    </div>
+  </section>
+
+  <section class="planner-section" id="planner">
+    <div class="planner-shell">
+      <div class="planner-head">
+        <div>
+          <h2>行程 App 视图</h2>
+          <p>按日期切换，直接看当天路线、交通方式和关键提醒。</p>
+        </div>
+        <div class="day-tabs" id="dayTabs">
+          <button type="button" class="active" data-day="arrival">6/29</button>
+          <button type="button" data-day="east">6/30</button>
+          <button type="button" data-day="eastAlt">6/30B</button>
+          <button type="button" data-day="west">7/1</button>
+          <button type="button" data-day="shopping">7/2</button>
+          <button type="button" data-day="return">7/3</button>
+        </div>
+      </div>
+      <div class="planner-body">
+        <aside class="day-summary" id="daySummary"></aside>
+        <div class="timeline" id="dayTimeline"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="map-section" id="map">
+    <div class="map-shell">
+      <div class="map-head">
+        <div>
+          <h2>地图规划</h2>
+          <p>按线路查看点位、交通距离和预估用时。公交实时路线出发当天再用 Naver Map / KakaoMap 确认。</p>
+        </div>
+        <div class="route-tabs" id="routeTabs">
+          <button type="button" class="active" data-route="all">全部</button>
+          <button type="button" data-route="arrival">抵达</button>
+          <button type="button" data-route="east">东线</button>
+          <button type="button" data-route="eastAlt">东线备选</button>
+          <button type="button" data-route="west">西线</button>
+          <button type="button" data-route="shopping">购物</button>
+        </div>
+      </div>
+      <div class="map-body">
+        <div id="jejuMap" aria-label="济州岛行程地图"></div>
+        <aside class="place-panel">
+          <h3 id="routeTitle">全部点位</h3>
+          <div id="placeList"></div>
+        </aside>
+      </div>
+      <div class="map-fallback" id="mapFallback">地图资源未加载。可使用右侧地点链接在 Naver Map 或 KakaoMap 中打开。</div>
+    </div>
+  </section>
+
+  <main class="content">
+    <article class="guide editable" id="guide">
+      <h1>济州岛出行（护照随身携带）</h1><p>行程日期：2026-06-29 至 2026-07-03</p><p>人数：2 人</p><p>定位：东线、西线、购物各一天</p><section class="guide-section first-section"><h2>0. 行程总览</h2><ul><li>6/29 周一：16:30 抵达济州，入住新济州/保健路附近。入境、办交通卡。</li><li>6/30 周二：东线，牛岛环岛骑行 + 城山日出峰 或 咸徳 + 月汀里。</li><li>7/1 周三：西线，涯月邑 + 挟才海水浴场。</li><li>7/2 周四：购物日，七星街 + 东门市场 + 保健路。</li><li>7/3 周五：上午返程。重点是机场、值机、出境。</li></ul><p>本次酒店 / Hotel：</p><ul><li>酒店位置：新济州 / 莲洞 / 保健路附近。</li><li>Naver Map 搜索：<code>제주특별자치도 제주시 신대로22길 4</code></li><li>韩文地址：<code>제주특별자치도 제주시 신대로22길 4</code></li><li>英文地址：<code>4, Sindae-ro 22-gil, Jeju-si, Jeju-do</code></li><li>旧地址 / Lot address：<code>연동 306-14, Jeju-si</code></li><li>给司机看 / Show this to the driver：<code>Please take us to 4, Sindae-ro 22-gil, Jeju-si.</code></li><li>韩文备用：<code>제주시 연동 신대로22길 4로 가주세요.</code></li></ul><section class="guide-section"><h2>1. 出发前准备</h2><h3>1.1 入境与证件</h3><p>提前准备：</p><ul><li>护照，有效期至少 6 个月以上，并预留 2 页以上空白页，全程随身携带。</li><li>返程机票、酒店订单、行程计划截图，建议准备英文版或英文页面截图。</li><li>航司值机和入境时可能会看电子版材料，放在手机相册里。</li></ul><p>入境卡：</p><ul><li>韩国 e-Arrival Card 官方网站显示：电子入境申报免费，需在入境韩国前 3 天内完成并提交。官网是：<a href="https://www.e-arrivalcard.go.kr/" target="_blank" rel="noopener">https://www.e-arrivalcard.go.kr/</a></li><li>填好后截图保存。</li><li>如果飞机上发纸质入境卡，也可以备填一份；飞机上通常会提供笔，最终以航司和现场入境要求为准。</li></ul><p>落地入境流程参考：</p><ul><li>落地后先确认韩国流量卡、eSIM 或漫游网络能用。</li><li>入境大致会经过健康信息/二维码、指纹与证件检查、行李入境安检等环节。</li><li>健康信息环节可能需要扫描现场二维码，填写出发地/来源地等信息，获得个人健康二维码后扫码通过。</li><li>指纹和证件检查时通常会看护照、机票/行程信息、入境卡或电子入境申报信息。</li><li>行李入境安检不要携带水果、肉类等禁止入境物品。</li></ul><h3>1.2 钱、支付和现金</h3><p>建议：</p><ul><li>可以提前两天在工商银行或者中国银行兑换韩币，最好准备一张带银联标识的银行卡可以在韩国ATM机取钱。</li><li>每人准备25万韩元现金作为基础备用，可以根据需要的花费先预估一下，可备用visa银行卡，但是很多店也支持微信支付宝。</li><li>所有小票、免税店提货凭证、退税单都妥善保存。</li></ul><p>韩元心算：</p><ul><li>粗略换算：韩元去掉 3 个零再乘 5，约等于人民币。</li><li>例如 10,000 韩元约 50 元人民币。</li></ul><h3>1.3 通讯、电源和 App</h3><p>必备：</p><ul><li>提前买韩国流量卡，有电话需求买电话卡。</li><li>最好国内手机卡建议开通短信漫游，避免在国外登录 App 时收不到验证码。</li><li>德标圆孔转换头；多功能转换头可能松，带稳定的德标转换头，可以带个插排，充电会方便一点。</li><li>充电宝。韩国没有像国内一样普遍的共享充电宝。</li><li>取卡针。</li><li>牙刷牙膏、一次性洗漱用品。酒店不一定免费提供。纸巾。外面厕所和酒店纸巾可能偏薄。带一次性床垫，韩国酒店都不太干净。</li><li>黑笔，可用于纸质入境资料或现场表格。</li></ul><p>App：</p><ul><li>Naver Map：主导航和公交查询。</li><li>KakaoMap：备选导航。</li><li>Papago：翻译菜单、地址、对话。</li><li>微信/AI 翻译：服务行业很多人会用翻译软件，中文、图片、手势通常比纯英文更好沟通。</li><li>百度地图 / 谷歌地图：可作为补充。</li><li>Uber：打车备用。</li><li>Kakao T：如果能注册，可作为打车备用。</li><li>K.ride：打车备用，尤其是东线、西线等偏远海边。</li></ul><h3>1.4 T-money 公交卡</h3><p>购买：</p><ul><li>机场或市区 CU/GS25/7-11 便利店购买。</li><li>充值需要现金，先充值20000左右</li></ul><p>使用：</p><ul><li>上车刷卡。</li><li>部分车可能支持上车支付宝扫码，以现场设备为准。</li><li>下车前按红色 STOP 铃。</li><li>下车再刷卡。</li><li>下车刷卡后，短时间内换乘可享优惠。</li><li>车快到站时，如果是路边站点，要注意招手示意司机。</li><li>公交上保持安静，不吃东西，不拿敞口饮料上车。</li></ul><section class="guide-section"><h2>2. 交通策略</h2><h3>2.1 市区到酒店</h3><p>济州机场到新济州/保健路附近很近，落地当天直接打车。</p><p>做法：</p><ul><li>机场出来去出租车等候区。</li><li>给司机看酒店韩文地址。</li><li>也可以用 Uber、Kakao T、K.ride。</li><li>机场到新济州通常是短途，费用以实际计价为准。</li><li>如果使用带接送机的免税店返点服务，落地后按客服给的车牌号和等车位置集合；常见集合点可能在机场 3 楼 4 号门附近，以当天通知为准。</li></ul><h3>2.2 长距离出行</h3><p>避免中途站没座位或错车，可以从机场、济州巴士总站等大站上车。</p><p>地图搜索：</p><ul><li>用 Naver Map 看车号、站台、到站时间和换乘。</li><li>大众点评适合找餐厅和咖啡店，再配合百度地图、Naver Map 或 KakaoMap 导航。</li><li>很多餐厅有固定店休，例如周几不营业，或午休/下午休息，出发前先查营业时间。</li></ul><p>打车：</p><ul><li>滴滴在市区能打，但价格可能偏贵。</li><li>Uber 和 K.ride 建议提前下载，去西线、东线等偏远海边时也更容易叫到车。</li><li>路边招出租车也可以，但要确认正规出租车和计价。</li></ul><section class="guide-section"><h2>3. 6/29 抵达日：酒店周边小逛</h2><ul><li>16:30 抵达济州机场。</li><li>入境、取行李、确认电话卡/流量卡能用。</li><li>机场或市区便利店买 T-money。</li><li>打车去酒店。</li><li>办理入住或寄存行李。</li><li>晚上保健路小逛。酒店到保健路/莲洞步行街约 997m，步行约 14 分钟。</li><li>可以逛逛线上免税店（通常需要2-3天快递时间，大部分首尔发货），线上包括乐天、新罗、新世界，都支持微信/支付宝，可三家比价。免税店提货在安检后，三家都在19号登机口对面，提货后千万不要拆包装，否则会被没收，等达到目的地出海关之后再拆。退税位置（非免税店买的才退税）在17号登机口对面的窗口，提供退税卡和护照，可选择现金/微信/支付宝。</li><li>线下免税店：提前在网上购买金卡，可以参与返点。</li></ul><section class="guide-section"><h2>4. 6/30 东线：两个方案</h2><h3>4.1 方案 A：牛岛环岛骑行 + 城山日出峰</h3><p>路线顺序：</p><ul><li>市区酒店：到城山港约 70-120 分钟，公交更久，打车更快；尽量早一点出发。</li><li>城山港：买票、填登船申报单约 20-40 分钟。城山浦到牛岛船程约 15 分钟；6-8 月约 30 分钟一班，以现场船班为准。</li><li>牛岛：停留 3-4 小时。租电动自行车环岛，导航 U-DOUGH 咖啡店；回城山港船程约 15 分钟，留意最晚离岛时间。</li><li>城山港：下船和整理约 10-20 分钟。到城山日出峰步行约 20 分钟。</li><li>城山日出峰：停留 45-90 分钟。</li><li>济州市区：回酒店或吃晚饭。</li></ul><h3>4.2 方案 B：咸德 + 小狗咖啡 + 月汀里</h3><p>路线顺序：</p><ul><li>市区酒店：Uber/出租车到咸德，约 35-45 分钟，公交车一个多小时。</li><li>咸德海水浴场：停留 60-90 分钟。之后步行到海女包饭，约 10 分钟内。</li><li>海女包饭：201 路公交去伦敦贝果/小狗咖啡一带，车程约 19 分钟，另看等车时间；出租车约 10 分钟，约 4.7km。</li><li>小狗咖啡、伦敦贝果博物馆、Blue Elephant 眼镜店可以逛一逛。之后步行到 Moal Boal，约 23 分钟，约 1.5km。</li><li>Moal Boal 咖啡厅：打车到月汀里/Moumoon，约 6.6km，约 9 分钟。</li><li>月汀里/Moumoon：201 路回酒店约 1 小时 16 分钟；打车约 1 小时。</li><li>济州市区：回酒店或顺路吃晚饭。如果还想去免税店，注意很多线下免税店约 19:00 关门。</li></ul><p>重点提醒：</p><ul><li>小狗咖啡下午人多，窗景好但甜品偏甜。伦敦贝果可以先拿号，等待时逛旁边小店。</li><li>Moal Boal 距离伦敦贝果/小狗咖啡一带约 1.5km，步行约 23 分钟，适合看日落，人相对少，饮品也偏甜。</li><li>月汀里咖啡店和纪念品店多，Moumoon 的落地窗拍照好看；很多店关得早，别太晚到。</li><li>很多餐厅和咖啡店不支持微信/支付宝，现金和 Visa 要留够。</li><li>如果当天还想回免税店，注意线下免税店大多 19:00 左右关门。</li></ul><h3>4.3 牛岛怎么逛</h3><p>上岛后：</p><ul><li>租电动自行车或电助力车，车型和规则以现场为准。</li><li>带护照，买船票或租车可能用到。</li><li>上岛后导航搜 <strong>U-DOUGH 咖啡店</strong>，可以作为牛岛环岛的定位点。</li><li>环岛骑行，边骑边停。</li></ul><section class="guide-section"><h2>5. 7/1 西线：涯月邑 + 挟才海水浴场</h2><h3>5.1 西线自由行</h3><p>路线顺序：</p><ul><li>市区酒店：出发准备 10 分钟。坐 202 路去汉谭洞/涯月方向，约 60 分钟；打车约 36 分钟；202 路间隔约 15 分钟左右，站台显示屏可切中文。</li><li>汉谭洞/涯月海岸步道：提前几站在汉谭洞下车，沿海边道路往涯月邑方向走。</li><li>涯月邑：午餐或咖啡后，坐 202 路去挟才海水浴场，约 30 分钟。</li><li>挟才海水浴场：回市区坐 202 路约 80-100 分钟。</li><li>济州市区：回酒店或晚餐。西线总耗时较长，上午出发、下午回到市区通常也要到 16:00 后。</li></ul><h3>5.2 西线交通</h3><ul><li>202 路站台有显示屏，可切中文，到站时间比较清楚。</li><li>市区到涯月/汉谭洞公交约 1 小时，打车约 36 分钟。</li><li>涯月到挟才公交约 30 分钟。</li><li>挟才回济州市区约 80-100 分钟，建议多预留时间。</li><li>如果上午 9:30 左右出发，中午在涯月一带吃饭，下午去挟才，回市区可能已经 16:30 左右。</li></ul><section class="guide-section"><h2>6. 7/2 购物日：七星街 + 东门市场 + 保健路</h2><p>集中购物、吃小吃、买伴手礼，晚上回酒店整理行李。</p><p>结账：</p><ul><li>带护照。</li><li>乐天附近不同 Olive Young 营业时间可能不同，在地图上查。</li><li>可先扫码领取汇率或会员优惠，再提供护照。</li><li>买液体和护肤品要考虑托运行李。</li></ul><h3>6.1 免税店、返点和机场提货</h3><p>线上购物：</p><ul><li>新罗和乐天免税店都可以提前下载 App。</li><li>买好回国机票后，一般可以开始线上购物，离境时在登机口附近提货。</li><li>部分大牌可能要从首尔调货到济州，最好提前 3-5 天锁单，否则可能错过下单时间。</li></ul><p>线下购物：</p><ul><li>市区免税店建议放在 Day 1 或尽量提前去。</li><li>韩国本土品牌通常可以线下自提，大牌多为机场提货，需要预留配送时间。</li><li>市区免税店折扣力度通常比机场大，韩国本土品牌和中国品牌也更多。</li></ul><p>以乐天免税店为例：</p><ul><li>常见营业时间约 10:00-19:00，去之前再确认当天营业时间。</li><li>到店先在前台扫码注册个人会员。</li><li>如使用返点服务，在小卡纸或系统里填写金团号，先发客服核对无误。</li><li>结账时提供护照、金团卡/金团号、航班号和航班时间。</li><li>打印小票后重点核对护照号、金团号、航班号、航班时间、商品信息。</li><li>免税店购买的大牌多为离境当天机场提货（机场20号登机口），购物后带小票离开即可。</li><li>商城积分通常可凭小票在前台领取，积分绑定护照，当天可用。</li><li>如果要用积分，结账时告知店员使用部分或全部积分，并提供护照。</li><li>建议先买贵的，再用积分抵扣后面便宜的商品。</li><li>部分品牌或店铺不能用积分，可在一楼前台确认名单。</li></ul><p>返点服务：</p><ul><li>出发前找好返点公司。</li><li>出发前提前预约，确定航班后和客服确认接机时间。</li><li>购物前向客服确认新罗/乐天等免税店的返点额度、金团号和适用范围。</li><li>如果化妆品、护肤品买得多，可比较各家返点力度后再决定去哪个免税店。</li><li>到免税店后可在前台领取填写金团号的纸或卡，填写后先发给客服核对。</li><li>返点通常需要把护照信息、小票编号发给客服，提到实物后再拍实物图给客服。（千万不要给任何人提供护照照片）</li><li>返点、接送机和金团号规则变化较快，务必以客服当天确认和免税店现场规则为准。</li></ul><h3>6.5 小店退税和小票</h3><p>小票识别：</p><ul><li><code>DUTY FREE</code>：免税店购物，无需再退税，但小票是返点、提货凭证，务必保留。</li><li><code>Immediate</code> 或类似即时退税字样：已现场退税，例如 Olive Young、部分 Jeju 礼品店和百货店，通常无需机场再退。</li><li>其他未标明免税或即时退税的小票：可能需要机场退税，保留好小票和 tax refund 单。</li></ul><p>现场退税：</p><ul><li>保健路附近很多门店满 1.5 万韩元可退税，逛街时记得随身带护照。</li><li>收银时刷护照，付款时直接按免税价格结算。</li><li>常见例子：Olive Young、星星的店、部分 Jeju 礼品店等，以门店规则为准。</li><li>橘子巧克力、橘子软糖、橘子主题伴手礼适合作为礼物，结账时记得提供护照。</li></ul><p>机场退税：</p><ul><li>收银时拿好退税单。注意不是小票，是带条形码、写有 tax refund 的退税单。</li><li>一般商家会主动提供，没给的话记得询问。</li><li>可能支持机场退税的店包括 my jeju gift、welcome jeju、hi jeju、Onni，以及部分运动品牌店等，以现场标识为准。</li><li>可以购物后在支付宝搜索“境外退税”预约退税，上传护照和退税单。</li><li>上传后退税单也要保管好，机场可能还要核验。</li></ul><p>不退税：</p><ul><li>没有专门写 tax refund 的店通常不退税。</li><li>付款前可以顺口问一句，例如 Mandarin island 等小店以现场回复为准。</li></ul><h3>6.6 娱乐预约</h3><ul><li>韩女三件套、妆造、写真、发型等项目建议提前一周线上预约。</li><li>预约渠道通常是店铺 Instagram、KakaoTalk 或代预约。</li><li>临近日期可能没有档期，特别是热门店和周末。</li></ul></section>
+    </article>
+    <aside class="side-panel">
+      <h2>快速跳转</h2>
+      <a href="#planner">行程 App 视图</a>
+      <a href="#guide">出发前准备</a>
+      <a href="#map">地图规划</a>
+      <a href="#east">6/30 东线</a>
+      <a href="#west">7/1 西线</a>
+      <a href="#shopping">7/2 购物</a>
+      <a href="#tips">避坑清单</a>
+      <a href="#sources">参考来源</a>
+    </aside>
+  </main>
+
+  <div class="edit-note" id="editNote">编辑模式已开启。直接点击页面文字修改，完成后点“保存”。</div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script>
+    const dayPlans = {
+      arrival: {
+        date: "6/29 周一",
+        title: "抵达 + 保健路轻逛",
+        focus: "入境、酒店、T-money，晚上只轻逛",
+        transport: "机场出租车 + 步行",
+        intensity: "低",
+        route: "济州机场 → 新济州/保健路酒店 → 保健路",
+        items: [
+          { time: "16:30", title: "抵达济州机场", desc: "入境、取行李、确认流量卡/eSIM。", tags: ["护照", "网络", "入境"] },
+          { time: "18:00", title: "前往酒店", desc: "打车到新济州/保健路附近，给司机看韩文地址。", tags: ["出租车", "酒店"] },
+          { time: "19:30", title: "保健路轻逛", desc: "酒店到保健路/莲洞步行街约 997m，步行约 14 分钟；顺路看 Olive Young 和晚餐。", tags: ["T-money", "Olive Young", "晚餐"] }
+        ]
+      },
+      east: {
+        date: "6/30 周二",
+        title: "东线：牛岛 + 城山日出峰",
+        focus: "先牛岛环岛骑行，再去城山日出峰",
+        transport: "公交/打车 + 渡船 + 电动自行车",
+        intensity: "高",
+        route: "酒店 → 城山港 → 牛岛 → 城山日出峰 → 济州市",
+        items: [
+          { time: "交通 70-120min", title: "酒店 → 城山港", desc: "公交更久，打车更快；到港后买船票、填登船申报单，预留 20-40 分钟。", tags: ["公交/打车", "船票"] },
+          { time: "船程约 15min", title: "城山港 → 牛岛", desc: "6-8 月常见约 30 分钟一班，以现场船班为准；护照随身带。", tags: ["渡船", "护照"] },
+          { time: "停留 3-4h", title: "牛岛环岛骑行", desc: "租电动自行车，导航搜 U-DOUGH 咖啡店，再停白沙滩、牛岛峰等点；留意最晚离岛时间。", tags: ["骑行", "U-DOUGH", "果冻海"] },
+          { time: "步行约 20min", title: "城山港 → 城山日出峰", desc: "下船后直接去日出峰，步行约 20 分钟；累了再短打车。", tags: ["步行", "短打车可选"] },
+          { time: "停留 45-90min", title: "城山日出峰", desc: "体力好可登顶，累了只走免费拍照区；不再安排光峙其海边，之后直接回济州市区。", tags: ["拍照", "登顶可选"] }
+        ]
+      },
+      eastAlt: {
+        date: "6/30 周二",
+        title: "东线备选：咸德 + 月汀里",
+        focus: "晚一点出门，看海、咖啡店和海边小店",
+        transport: "Uber/出租车 + 201 路公交 + 步行",
+        intensity: "中",
+        route: "酒店 → 咸德 → 海女包饭 → 小狗咖啡/贝果 → Moal Boal → 月汀里 → 济州市",
+        items: [
+          { time: "交通 35-45min", title: "酒店 → 咸德", desc: "Uber 或出租车直达咸德海水浴场，参考 18000 韩元左右，按现场计价。", tags: ["Uber", "现金"] },
+          { time: "停留 60-90min", title: "咸德海水浴场", desc: "踩沙看海，想玩水就带替换衣服和小毛巾；之后步行约 10 分钟内到海女包饭。", tags: ["海边", "白沙"] },
+          { time: "停留 50-70min", title: "海女包饭", desc: "现金和 Visa 更稳。下一段到伦敦贝果/小狗咖啡一带，公交车程约 19 分钟，另看等车时间；出租车约 10 分钟，约 4.7km。", tags: ["午餐", "现金/Visa"] },
+          { time: "停留 90-120min", title: "小狗咖啡/伦敦贝果/Blue Elephant", desc: "窗景好但下午人多，贝果先拿号；眼镜店可以顺路看。之后步行约 23 分钟、约 1.5km 到 Moal Boal。", tags: ["咖啡", "贝果", "眼镜"] },
+          { time: "停留 45-75min", title: "Moal Boal", desc: "看海休息，适合等日落；之后打车到月汀里约 6.6km，约 9 分钟。", tags: ["日落", "休息"] },
+          { time: "停留 60-90min", title: "月汀里/Moumoon", desc: "逛海边、咖啡店和纪念品小店；很多店关得早。回酒店公交约 1 小时 16 分钟，打车约 1 小时。", tags: ["月汀里", "Moumoon"] }
+        ]
+      },
+      west: {
+        date: "7/1 周三",
+        title: "西线：涯月邑 + 挟才",
+        focus: "202 路、汉谭洞海岸步道、挟才海水浴场",
+        transport: "202 路公交 + 步行",
+        intensity: "中",
+        route: "酒店 → 汉谭洞 → 涯月邑 → 挟才海水浴场 → 济州市",
+        items: [
+          { time: "公交约 60min", title: "市区 → 汉谭洞/涯月方向", desc: "坐 202 路约 60 分钟，打车约 36 分钟；站台显示屏可切中文，看清到站时间。", tags: ["202 路", "公交"] },
+          { time: "停留 60-90min", title: "汉谭洞/涯月海岸步道", desc: "不要直接在涯月邑下车，提前几站下，从海边道路往涯月邑方向走。", tags: ["海岸步道", "拍照"] },
+          { time: "停留 60-90min", title: "涯月邑", desc: "午餐、咖啡、海边散步。Lazy Pump 一带适合消费后进去拍照。", tags: ["午餐", "咖啡"] },
+          { time: "交通约 30min", title: "涯月邑 → 挟才", desc: "继续坐 202 路去挟才海水浴场。", tags: ["202 路"] },
+          { time: "停留约 2h", title: "挟才海水浴场", desc: "白沙、黑礁石和蓝色渐变海很值得慢慢看；找海景咖啡厅坐一会。", tags: ["海滩", "咖啡"] },
+          { time: "返程 80-100min", title: "挟才 → 济州市区", desc: "回程时间长，建议多预留；下午回到市区通常也要到 16:00 后。", tags: ["返程", "202 路"] }
+        ]
+      },
+      shopping: {
+        date: "7/2 周四",
+        title: "购物日：七星街 + 东门市场 + 保健路",
+        focus: "七星街、东门市场、保健路集中买完",
+        transport: "市区打车/步行",
+        intensity: "中",
+        route: "酒店 → 七星街 → 东门市场 → 保健路 → 酒店",
+        items: [
+          { time: "10:00", title: "七星街/中央地下商街", desc: "衣服、小饰品、K-pop 店、大创、中古店。", tags: ["服饰", "小物"] },
+          { time: "12:30", title: "东门市场小吃", desc: "鱼糕、炒年糕、米肠、橘子甜品。", tags: ["小吃", "现金"] },
+          { time: "14:00", title: "东门市场伴手礼", desc: "橘子巧克力、橘子软糖、冰箱贴，先比价。", tags: ["伴手礼"] },
+          { time: "17:00", title: "保健路补货", desc: "Olive Young、ABC MART、Art Box、便利店。", tags: ["Olive Young", "补货"] },
+          { time: "20:00", title: "整理行李", desc: "液体和护肤品按托运/随身分类。", tags: ["打包", "返程准备"] }
+        ]
+      },
+      return: {
+        date: "7/3 周五",
+        title: "上午返程",
+        focus: "机场、值机、出境",
+        transport: "出租车",
+        intensity: "低",
+        route: "酒店 → 济州机场",
+        items: [
+          { time: "出发前", title: "检查行李", desc: "护照、机票、充电宝、液体、购物袋数量。", tags: ["行李", "护照"] },
+          { time: "机场", title: "值机和出境", desc: "有免税提货就预留更多时间。", tags: ["值机", "安检"] },
+          { time: "登机前", title: "用掉零钱", desc: "剩余现金可在机场便利店买水或零食。", tags: ["便利店"] }
+        ]
+      }
+    };
+
+    const routeData = {
+      arrival: {
+        title: "抵达日",
+        color: "#7a5cba",
+        places: [
+          { name: "济州国际机场", ko: "제주국제공항", note: "6/29 抵达、7/3 返程", lat: 33.5113, lng: 126.4930, photo: ["#8cc6df", "#f7fbff"] },
+          { name: "新济州/保健路住宿区", ko: "누웨마루거리", note: "住宿、第一晚轻逛", lat: 33.4877, lng: 126.4900, photo: ["#f6c36a", "#39536b"] }
+        ],
+        legs: [
+          { from: "济州机场", to: "新济州/保健路", mode: "出租车", distance: "约 3-4km", duration: "约 10-15min" },
+          { from: "酒店", to: "保健路", mode: "步行", distance: "约 997m", duration: "约 14min" }
+        ]
+      },
+      east: {
+        title: "6/30 东线",
+        color: "#1f765d",
+        places: [
+          { name: "新济州/保健路住宿区", ko: "누웨마루거리", note: "东线距离远，建议尽早出发", lat: 33.4877, lng: 126.4900, photo: ["#f6c36a", "#39536b"] },
+          { name: "城山港", ko: "성산항", note: "牛岛船票、登船申报单", lat: 33.4746, lng: 126.9278, photo: ["#5fb7df", "#eaf8ff"] },
+          { name: "牛岛", ko: "우도", note: "电动自行车环岛；导航 U-DOUGH 咖啡店", lat: 33.5044, lng: 126.9557, photo: ["#27acd5", "#f5e4a8"] },
+          { name: "牛岛峰", ko: "우도봉", note: "牛岛环岛停靠点", lat: 33.4920, lng: 126.9660, photo: ["#79bd58", "#dbeea9"] },
+          { name: "白沙滩", ko: "서빈백사", note: "牛岛果冻海/白沙", lat: 33.5050, lng: 126.9420, photo: ["#1fb6d1", "#f8f0d5"] },
+          { name: "城山日出峰", ko: "성산일출봉", note: "看体力决定是否登顶", lat: 33.4580, lng: 126.9425, photo: ["#6e8f3d", "#ffd37b"] }
+        ],
+        legs: [
+          { from: "新济州/保健路", to: "城山港", mode: "公交/打车", distance: "约 47km", duration: "公交约 1h40-2h；打车约 1h10" },
+          { from: "城山港", to: "牛岛", mode: "渡船", distance: "约 3-4km", duration: "船程约 15min" },
+          { from: "牛岛环岛", to: "牛岛环岛", mode: "电动自行车", distance: "约 12-15km", duration: "边骑边玩约 3-4h" },
+          { from: "牛岛", to: "城山港", mode: "渡船", distance: "约 3-4km", duration: "船程约 15min" },
+          { from: "城山港", to: "城山日出峰", mode: "步行/短打车", distance: "约 3km", duration: "步行约 20min" },
+          { from: "城山日出峰", to: "济州市", mode: "公交/打车", distance: "约 45-50km", duration: "公交约 1h40-2h；打车约 1h10" }
+        ]
+      },
+      west: {
+        title: "7/1 西线",
+        color: "#236b90",
+        places: [
+          { name: "新济州/保健路住宿区", ko: "누웨마루거리", note: "坐 202 路去西线", lat: 33.4877, lng: 126.4900, photo: ["#f6c36a", "#39536b"] },
+          { name: "汉谭洞/涯月海岸步道", ko: "한담동", note: "提前下车，沿海走向涯月邑", lat: 33.4628, lng: 126.3108, photo: ["#36a9d6", "#f1a85f"] },
+          { name: "涯月邑", ko: "애월읍", note: "午餐、咖啡、海边散步", lat: 33.4636, lng: 126.3097, photo: ["#3aa0c8", "#f4c983"] },
+          { name: "挟才海水浴场", ko: "협재해수욕장", note: "白沙、黑礁石、渐变海", lat: 33.3937, lng: 126.2391, photo: ["#20b7d7", "#f6edcc"] },
+          { name: "新济州/保健路住宿区", ko: "누웨마루거리", note: "202 路返回市区", lat: 33.4877, lng: 126.4900, photo: ["#f6c36a", "#39536b"] }
+        ],
+        legs: [
+          { from: "新济州/保健路", to: "汉谭洞", mode: "202 路公交/打车", distance: "约 18-20km", duration: "公交约 60min；打车约 36min" },
+          { from: "汉谭洞", to: "涯月邑", mode: "步行", distance: "沿海步道", duration: "边走边拍约 60-90min" },
+          { from: "涯月邑", to: "挟才", mode: "202 路公交", distance: "约 20-22km", duration: "约 30min" },
+          { from: "挟才", to: "济州市", mode: "202 路公交", distance: "约 32-35km", duration: "约 80-100min" }
+        ]
+      },
+      shopping: {
+        title: "7/2 购物",
+        color: "#b46b23",
+        places: [
+          { name: "新济州/保健路", ko: "누웨마루거리", note: "Olive Young、ABC MART、餐厅", lat: 33.4877, lng: 126.4900, photo: ["#f6c36a", "#39536b"] },
+          { name: "七星街", ko: "칠성로 쇼핑거리", note: "服饰、小物、地下商街", lat: 33.5135, lng: 126.5233, photo: ["#d65f8c", "#ffe8b5"] },
+          { name: "东门市场", ko: "동문재래시장", note: "伴手礼、小吃、橘子巧克力", lat: 33.5116, lng: 126.5260, photo: ["#ee7f3b", "#f8d469"] }
+        ],
+        legs: [
+          { from: "新济州/保健路", to: "七星街", mode: "出租车/公交", distance: "约 5-6km", duration: "打车约 15-20min；公交约 25-35min" },
+          { from: "七星街", to: "东门市场", mode: "步行", distance: "约 500m", duration: "约 8-10min" },
+          { from: "东门市场", to: "保健路", mode: "出租车/公交", distance: "约 5-6km", duration: "打车约 15-20min；公交约 25-35min" }
+        ]
+      },
+      eastAlt: {
+        title: "6/30 东线备选",
+        color: "#2b8cbf",
+        places: [
+          { name: "新济州/保健路住宿区", ko: "누웨마루거리", note: "09:00 左右出发", lat: 33.4877, lng: 126.4900, photo: ["#f6c36a", "#39536b"] },
+          { name: "咸德海水浴场", ko: "함덕해수욕장", note: "踩沙看海；想玩水带换洗衣服", lat: 33.5438, lng: 126.6692, photo: ["#25b9d0", "#eaf5cf"] },
+          { name: "海女包饭", ko: "해녀김밥 함덕", note: "咸德附近午餐；现金/Visa 更稳", lat: 33.5425, lng: 126.6685, photo: ["#f0b94d", "#fff5dc"] },
+          { name: "小狗咖啡/伦敦贝果", ko: "런던베이글뮤지엄 제주", note: "先拿贝果号，再看海景窗", lat: 33.5565, lng: 126.7975, photo: ["#64b5d8", "#f7d7c8"] },
+          { name: "Moal Boal 咖啡厅", ko: "모알보알", note: "适合看日落，人相对少", lat: 33.5578, lng: 126.8060, photo: ["#d59559", "#f5e2c6"] },
+          { name: "月汀里/Moumoon", ko: "월정리 무문", note: "咖啡店、小店、海边", lat: 33.5567, lng: 126.7958, photo: ["#4cc5df", "#fff0b0"] },
+          { name: "新济州/保健路住宿区", ko: "누웨마루거리", note: "201 路或打车回市区", lat: 33.4877, lng: 126.4900, photo: ["#f6c36a", "#39536b"] }
+        ],
+        legs: [
+          { from: "新济州/保健路", to: "咸德", mode: "Uber/出租车", distance: "约 18-22km", duration: "约 35-45min，参考 18000 韩元" },
+          { from: "咸德", to: "海女包饭", mode: "步行", distance: "约 500-800m", duration: "约 10min" },
+          { from: "海女包饭", to: "小狗咖啡一带", mode: "公交 201/出租车", distance: "约 4.7km", duration: "公交车程约 19min，另看等车；出租车约 10min" },
+          { from: "小狗咖啡", to: "Moal Boal", mode: "步行", distance: "约 1.5km", duration: "约 23min" },
+          { from: "Moal Boal", to: "月汀里", mode: "出租车", distance: "约 6.6km", duration: "约 9min" },
+          { from: "月汀里", to: "酒店", mode: "公交 201/打车", distance: "约 28-32km", duration: "公交约 1h16min；打车约 1h" }
+        ]
+      }
+    };
+
+    const routeNames = { all: "全部点位", arrival: "抵达日", east: "6/30 东线", eastAlt: "6/30 东线备选", west: "7/1 西线", shopping: "7/2 购物" };
+    let map;
+    let mapLayers = [];
+
+    function naverSearchUrl(place) {
+      return "https://map.naver.com/p/search/" + encodeURIComponent(place.ko || place.name);
+    }
+    function kakaoSearchUrl(place) {
+      return "https://map.kakao.com/?q=" + encodeURIComponent(place.ko || place.name);
+    }
+    function mapEscape(value) {
+      return String(value || "").replace(/[&<>"]/g, ch => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[ch]));
+    }
+    function routePlaces(route) {
+      if (route === "all") {
+        const seen = new Set();
+        return ["arrival", "east", "eastAlt", "west", "shopping"].flatMap(key => routeData[key].places.map(place => ({...place, routeKey: key})))
+          .filter(place => {
+            const id = place.name + place.lat + place.lng;
+            if (seen.has(id)) return false;
+            seen.add(id);
+            return true;
+          });
+      }
+      return (routeData[route]?.places || []).map(place => ({...place, routeKey: route}));
+    }
+    function routeLegs(route) {
+      if (route === "all") {
+        return ["arrival", "east", "eastAlt", "west", "shopping"].flatMap(key =>
+          (routeData[key].legs || []).map(leg => ({...leg, routeKey: key}))
+        );
+      }
+      return (routeData[route]?.legs || []).map(leg => ({...leg, routeKey: route}));
+    }
+    function legText(leg) {
+      return leg.mode + " · " + leg.distance + " · " + leg.duration;
+    }
+    function legLabelPoint(key, index) {
+      const places = routeData[key]?.places || [];
+      const pairs = {
+        arrival: [[0, 1], [1, 1]],
+        east: [[0, 1], [1, 2], [2, 3], [2, 1], [1, 5], [5, 6], [6, 0]],
+        eastAlt: [[0, 1], [1, 2], [2, 3], [3, 4], [4, 5], [5, 6]],
+        west: [[0, 1], [1, 2], [2, 3], [3, 4]],
+        shopping: [[0, 1], [1, 2], [2, 0]]
+      };
+      const pair = pairs[key]?.[index];
+      if (!pair || !places[pair[0]] || !places[pair[1]]) return null;
+      const a = places[pair[0]];
+      const b = places[pair[1]];
+      return {
+        lat: (a.lat + b.lat) / 2,
+        lng: (a.lng + b.lng) / 2,
+        offset: index % 2 === 0 ? [0, -10] : [0, 12]
+      };
+    }
+    function addLegLabels(key) {
+      const data = routeData[key];
+      if (!data?.legs || !window.L || !map) return;
+      data.legs.forEach((leg, index) => {
+        const point = legLabelPoint(key, index);
+        if (!point) return;
+        const marker = L.marker([point.lat, point.lng], {
+          interactive: false,
+          icon: L.divIcon({
+            className: "",
+            html: '<div class="map-leg-label">🚕 ' + mapEscape(leg.distance) + ' ' + mapEscape(leg.duration.replace(/；/g, " / ")) + '</div>',
+            iconSize: null,
+            iconAnchor: point.offset
+          })
+        }).addTo(map);
+        mapLayers.push(marker);
+      });
+    }
+    function markerIcon(place, index) {
+      return L.divIcon({
+        className: "",
+        html: '<div class="map-number-marker">'
+          + '<span class="map-number-dot">' + mapEscape(index) + '</span>'
+          + '<span class="map-place-name">' + mapEscape(index + ". " + place.name) + '</span>'
+          + '</div>',
+        iconSize: null,
+        iconAnchor: [11, 11],
+        popupAnchor: [0, -12]
+      });
+    }
+    function clearMap() {
+      mapLayers.forEach(layer => layer.remove());
+      mapLayers = [];
+    }
+    function renderPlaceList(route) {
+      const list = document.getElementById("placeList");
+      const title = document.getElementById("routeTitle");
+      title.textContent = routeNames[route] || "路线";
+      list.innerHTML = routePlaces(route).map((place, index) => {
+        const meta = mapEscape(place.ko) + (place.note ? " · " + mapEscape(place.note) : "");
+        return '<div class="place-item">'
+          + '<div class="place-name">' + mapEscape((index + 1) + ". " + place.name) + '</div>'
+          + '<div class="place-meta">' + meta + '</div>'
+          + '<div class="place-links">'
+          + '<a href="' + naverSearchUrl(place) + '" target="_blank" rel="noopener">Naver Map</a>'
+          + '<a href="' + kakaoSearchUrl(place) + '" target="_blank" rel="noopener">KakaoMap</a>'
+          + '</div></div>';
+      }).join("");
+    }
+    function drawRoute(route) {
+      renderPlaceList(route);
+      if (!map) {
+        renderStaticMap(route);
+        return;
+      }
+      clearMap();
+      const keys = route === "all" ? ["arrival", "east", "eastAlt", "west", "shopping"] : [route];
+      const bounds = [];
+
+      keys.forEach(key => {
+        const data = routeData[key];
+        if (!data) return;
+        const latlngs = data.places.map(place => [place.lat, place.lng]);
+        latlngs.forEach(point => bounds.push(point));
+        const line = L.polyline(latlngs, { color: "#5d51df", weight: 7, opacity: 0.92, lineCap: "round", lineJoin: "round" }).addTo(map);
+        mapLayers.push(line);
+        addLegLabels(key);
+        data.places.forEach((place, idx) => {
+          const marker = L.marker([place.lat, place.lng], { icon: markerIcon(place, idx + 1) }).addTo(map);
+          marker.bindPopup('<strong>' + (idx + 1) + '. ' + mapEscape(place.name) + '</strong><br>'
+            + mapEscape(place.ko) + '<br>' + mapEscape(place.note) + '<br>'
+            + '<a href="' + naverSearchUrl(place) + '" target="_blank">Naver Map</a> · '
+            + '<a href="' + kakaoSearchUrl(place) + '" target="_blank">KakaoMap</a>');
+          mapLayers.push(marker);
+        });
+      });
+      if (bounds.length) map.fitBounds(bounds, { padding: [26, 26] });
+    }
+    function initMap() {
+      if (!window.L) {
+        document.getElementById("mapFallback").style.display = "block";
+        renderPlaceList("all");
+        renderStaticMap("all");
+        return;
+      }
+      map = L.map("jejuMap", {
+        scrollWheelZoom: true,
+        touchZoom: true,
+        doubleClickZoom: true,
+        boxZoom: true,
+        keyboard: true
+      }).setView([33.43, 126.55], 10);
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        maxZoom: 18,
+        attribution: "&copy; OpenStreetMap contributors"
+      }).addTo(map);
+      drawRoute("all");
+    }
+    function renderStaticMap(route) {
+      const mapEl = document.getElementById("jejuMap");
+      const keys = route === "all" ? ["arrival", "east", "eastAlt", "west", "shopping"] : [route];
+      const points = routePlaces(route);
+      const allPoints = ["arrival", "east", "eastAlt", "west", "shopping"].flatMap(key => routeData[key].places);
+      const minLat = Math.min(...allPoints.map(p => p.lat)) - 0.02;
+      const maxLat = Math.max(...allPoints.map(p => p.lat)) + 0.02;
+      const minLng = Math.min(...allPoints.map(p => p.lng)) - 0.03;
+      const maxLng = Math.max(...allPoints.map(p => p.lng)) + 0.03;
+      const width = 900;
+      const height = 520;
+      const project = p => {
+        const x = 54 + ((p.lng - minLng) / (maxLng - minLng)) * (width - 108);
+        const y = 46 + ((maxLat - p.lat) / (maxLat - minLat)) * (height - 92);
+        return [x, y];
+      };
+      const pathFromPlaces = places => places.map((p, idx) => {
+        const [x, y] = project(p);
+        return (idx === 0 ? "M" : "L") + x.toFixed(1) + " " + y.toFixed(1);
+      }).join(" ");
+      const islandPath = "M126 152 C202 70 380 47 544 75 C701 101 805 204 796 316 C787 435 655 483 496 467 C323 449 157 390 94 300 C58 249 76 189 126 152 Z";
+      const coastPath = "M300 327 C365 292 449 291 510 333 C555 365 588 414 660 406 C626 455 537 477 442 453 C365 433 314 391 300 327 Z";
+      const roads = [
+        "M94 210 C180 205 242 247 313 257 C420 272 517 236 616 252 C694 264 740 300 798 330",
+        "M210 86 C300 146 344 212 370 300 C396 388 456 430 535 468",
+        "M135 366 C245 330 334 319 430 328 C527 337 610 371 748 410",
+        "M513 81 C492 154 506 226 553 299 C584 346 624 382 684 444"
+      ];
+      let svg = '<svg class="static-map" viewBox="0 0 ' + width + ' ' + height + '" role="img" aria-label="济州岛旅行足迹图">';
+      svg += '<rect x="0" y="0" width="' + width + '" height="' + height + '" fill="#edf3f8"></rect>';
+      svg += '<path class="island" d="' + islandPath + '"></path>';
+      svg += '<path class="coast-water" d="' + coastPath + '"></path>';
+      roads.forEach(d => {
+        svg += '<path class="minor-road" d="' + d + '"></path>';
+      });
+      if (route !== "all") {
+        ["arrival", "east", "eastAlt", "west", "shopping"].filter(key => key !== route).forEach(key => {
+          const data = routeData[key];
+          if (!data) return;
+          svg += '<path class="route-line secondary" d="' + pathFromPlaces(data.places) + '"></path>';
+        });
+      }
+      keys.forEach(key => {
+        const data = routeData[key];
+        if (!data) return;
+        svg += '<path class="route-line" d="' + pathFromPlaces(data.places) + '"></path>';
+      });
+      keys.forEach(key => {
+        const data = routeData[key];
+        if (!data?.legs) return;
+        data.legs.forEach((leg, index) => {
+          const labelPoint = legLabelPoint(key, index);
+          if (!labelPoint) return;
+          const [x, y] = project(labelPoint);
+          const label = mapEscape("🚕 " + leg.distance + "  " + leg.duration.replace(/；/g, " / "));
+          const boxWidth = Math.min(300, Math.max(128, label.length * 7 + 18));
+          const boxHeight = 30;
+          const boxX = Math.max(10, Math.min(width - boxWidth - 10, x - boxWidth / 2));
+          const boxY = Math.max(10, Math.min(height - boxHeight - 10, y - boxHeight / 2 + (index % 2 === 0 ? -10 : 12)));
+          svg += '<rect class="route-label-bg" x="' + boxX.toFixed(1) + '" y="' + boxY.toFixed(1) + '" width="' + boxWidth.toFixed(1) + '" height="' + boxHeight + '" rx="6"></rect>';
+          svg += '<text class="route-label" x="' + (boxX + 9).toFixed(1) + '" y="' + (boxY + 20).toFixed(1) + '">' + label + '</text>';
+        });
+      });
+      points.forEach((p, idx) => {
+        const [x, y] = project(p);
+        svg += '<circle class="number-point" cx="' + x.toFixed(1) + '" cy="' + y.toFixed(1) + '" r="12"></circle>';
+        svg += '<text class="number-text" x="' + x.toFixed(1) + '" y="' + y.toFixed(1) + '">' + (idx + 1) + '</text>';
+        svg += '<text x="' + (x + 17).toFixed(1) + '" y="' + (y + 4).toFixed(1) + '" style="font-size:15px;font-weight:800">' + mapEscape((idx + 1) + ". " + p.name) + '</text>';
+      });
+      svg += '<text class="map-title" x="30" y="' + (height - 42) + '">济州岛旅行足迹图</text>';
+      svg += '<text class="map-subtitle" x="32" y="' + (height - 18) + '">按上方按钮切换抵达、东线、西线和购物路线</text>';
+      svg += '</svg>';
+      mapEl.innerHTML = svg;
+    }
+    function renderDayPlan(day) {
+      const plan = dayPlans[day] || dayPlans.arrival;
+      document.getElementById("daySummary").innerHTML =
+        '<div class="kicker">' + mapEscape(plan.date) + '</div>'
+        + '<h3>' + mapEscape(plan.title) + '</h3>'
+        + '<p>' + mapEscape(plan.focus) + '</p>'
+        + '<div class="summary-grid">'
+        + '<div class="summary-row"><span>路线</span><strong>' + mapEscape(plan.route) + '</strong></div>'
+        + '<div class="summary-row"><span>交通</span><strong>' + mapEscape(plan.transport) + '</strong></div>'
+        + '<div class="summary-row"><span>强度</span><strong>' + mapEscape(plan.intensity) + '</strong></div>'
+        + '</div>';
+      document.getElementById("dayTimeline").innerHTML = plan.items.map(item =>
+        '<div class="timeline-item">'
+        + '<div class="timeline-time">' + mapEscape(item.time) + '</div>'
+        + '<div class="timeline-card">'
+        + '<h4>' + mapEscape(item.title) + '</h4>'
+        + '<p>' + mapEscape(item.desc) + '</p>'
+        + '<div class="tag-row">' + item.tags.map(tag => '<span class="tag">' + mapEscape(tag) + '</span>').join("") + '</div>'
+        + '</div></div>'
+      ).join("");
+    }
+    document.addEventListener("click", event => {
+      const dayButton = event.target.closest("[data-day]");
+      if (!dayButton) return;
+      document.querySelectorAll("[data-day]").forEach(btn => btn.classList.remove("active"));
+      dayButton.classList.add("active");
+      renderDayPlan(dayButton.dataset.day);
+    });
+    document.addEventListener("click", event => {
+      const button = event.target.closest("[data-route]");
+      if (!button) return;
+      document.querySelectorAll("[data-route]").forEach(btn => btn.classList.remove("active"));
+      button.classList.add("active");
+      drawRoute(button.dataset.route);
+    });
+
+    const STORAGE_KEY = "jeju-website-html-v2";
+    const editBtn = document.getElementById("editBtn");
+    const saveBtn = document.getElementById("saveBtn");
+    const downloadMdBtn = document.getElementById("downloadMdBtn");
+    const resetBtn = document.getElementById("resetBtn");
+    const printBtn = document.getElementById("printBtn");
+    const editNote = document.getElementById("editNote");
+    const editableBlocks = Array.from(document.querySelectorAll(".editable"));
+    const initialState = editableBlocks.map(el => el.innerHTML);
+    const sectionAliases = [
+      ["4. 6/30 东线", "east"],
+      ["5. 7/1 西线", "west"],
+      ["6. 7/2 购物日", "shopping"],
+      ["8. 避坑清单", "tips"],
+      ["10. 主要参考来源", "sources"]
+    ];
+
+    function assignAnchors() {
+      document.querySelectorAll(".guide-section h2").forEach(h2 => {
+        const text = h2.textContent.trim();
+        const match = sectionAliases.find(([label]) => text.includes(label));
+        if (match) h2.closest(".guide-section").id = match[1];
+      });
+    }
+    function setEditing(on) {
+      editableBlocks.forEach(el => el.contentEditable = on ? "true" : "false");
+      editBtn.textContent = on ? "退出编辑" : "编辑页面";
+      editNote.classList.toggle("show", on);
+    }
+    function save() {
+      const state = editableBlocks.map(el => el.innerHTML);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      setEditing(false);
+      saveBtn.textContent = "已保存";
+      setTimeout(() => saveBtn.textContent = "保存", 1200);
+    }
+    function reset() {
+      if (!confirm("确定恢复初始网页内容？当前浏览器保存的修改会被清除。")) return;
+      localStorage.removeItem(STORAGE_KEY);
+      editableBlocks.forEach((el, idx) => el.innerHTML = initialState[idx]);
+      assignAnchors();
+      setEditing(false);
+    }
+    function restore() {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return;
+      try {
+        const state = JSON.parse(raw);
+        editableBlocks.forEach((el, idx) => {
+          if (typeof state[idx] === "string") el.innerHTML = state[idx];
+        });
+      } catch {}
+    }
+    function inlineMarkdown(node) {
+      if (node.nodeType === Node.TEXT_NODE) return node.textContent.replace(/\s+/g, " ");
+      if (node.nodeType !== Node.ELEMENT_NODE) return "";
+      const tag = node.tagName.toLowerCase();
+      const text = Array.from(node.childNodes).map(inlineMarkdown).join("");
+      if (tag === "strong" || tag === "b") return "**" + text.trim() + "**";
+      if (tag === "code") return "`" + text.trim() + "`";
+      if (tag === "a") {
+        const href = node.getAttribute("href") || "";
+        const label = text.trim() || href;
+        return href && href === label ? "<" + href + ">" : "[" + label + "](" + href + ")";
+      }
+      return text;
+    }
+    function blockText(node) {
+      return Array.from(node.childNodes).map(inlineMarkdown).join("").replace(/\s+/g, " ").trim();
+    }
+    function tableToMarkdown(table) {
+      const rows = Array.from(table.querySelectorAll("tr")).map(row =>
+        Array.from(row.children).map(cell => blockText(cell).replace(/\|/g, "\\|"))
+      );
+      if (!rows.length) return "";
+      const widths = rows[0].map((_, index) => Math.max(3, ...rows.map(row => (row[index] || "").length)));
+      const formatRow = row => "| " + widths.map((width, index) => (row[index] || "").padEnd(width, " ")).join(" | ") + " |";
+      return [formatRow(rows[0]), "| " + widths.map(width => "-".repeat(width)).join(" | ") + " |", ...rows.slice(1).map(formatRow)].join("\n");
+    }
+    function guideToMarkdown() {
+      const guide = document.getElementById("guide");
+      const lines = [];
+      function walk(node) {
+        if (node.nodeType !== Node.ELEMENT_NODE) return;
+        const tag = node.tagName.toLowerCase();
+        if (/^h[1-3]$/.test(tag)) {
+          lines.push("#".repeat(Number(tag[1])) + " " + blockText(node), "");
+          return;
+        }
+        if (tag === "p") {
+          const text = blockText(node);
+          if (text) lines.push(text, "");
+          return;
+        }
+        if (tag === "ul") {
+          Array.from(node.children).forEach(li => {
+            if (li.tagName.toLowerCase() === "li") lines.push("- " + blockText(li));
+          });
+          lines.push("");
+          return;
+        }
+        if (tag === "table") {
+          const table = tableToMarkdown(node);
+          if (table) lines.push(table, "");
+          return;
+        }
+        Array.from(node.children).forEach(walk);
+      }
+      Array.from(guide.children).forEach(walk);
+      return lines.join("\n").replace(/\n{3,}/g, "\n\n").trim() + "\n";
+    }
+    function downloadMarkdown() {
+      const blob = new Blob([guideToMarkdown()], { type: "text/markdown;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "济州岛旅行攻略.md";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+      downloadMdBtn.textContent = "已下载";
+      setTimeout(() => downloadMdBtn.textContent = "下载 Markdown", 1200);
+    }
+    editBtn.addEventListener("click", () => setEditing(editableBlocks[0].contentEditable !== "true"));
+    saveBtn.addEventListener("click", save);
+    downloadMdBtn.addEventListener("click", downloadMarkdown);
+    resetBtn.addEventListener("click", reset);
+    printBtn.addEventListener("click", () => window.print());
+    restore();
+    assignAnchors();
+    setEditing(false);
+    renderDayPlan("arrival");
+    initMap();
+  </script>
+</body>
+</html>
