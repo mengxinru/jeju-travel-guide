@@ -310,6 +310,7 @@
       gap: 8px;
       flex-wrap: wrap;
       justify-content: flex-end;
+      max-width: 520px;
     }
     .route-tabs button.active {
       background: var(--green);
@@ -586,6 +587,63 @@
       .hero p { font-size: 16px; }
       .cards { grid-template-columns: 1fr; }
       .guide { padding: 18px; }
+      .map-section { padding: 0 12px; margin-bottom: 22px; }
+      .map-head {
+        display: block;
+        padding: 15px 14px 10px;
+      }
+      .map-head h2 { font-size: 21px; }
+      .map-head p { font-size: 13px; line-height: 1.5; }
+      .route-tabs {
+        margin: 12px -14px 0;
+        padding: 0 14px 4px;
+        flex-wrap: nowrap;
+        justify-content: flex-start;
+        overflow-x: auto;
+        max-width: none;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+      }
+      .route-tabs::-webkit-scrollbar { display: none; }
+      .route-tabs button {
+        flex: 0 0 auto;
+        min-height: 36px;
+        white-space: nowrap;
+      }
+      .map-body { min-height: 0; }
+      #jejuMap {
+        min-height: 360px;
+        height: 62vh;
+        max-height: 520px;
+      }
+      .static-map {
+        min-height: 360px;
+        height: 62vh;
+        max-height: 520px;
+      }
+      .place-panel {
+        padding: 12px 14px 14px;
+        max-height: none;
+      }
+      .place-panel h3 {
+        position: sticky;
+        top: 0;
+        z-index: 1;
+        margin: -12px -14px 8px;
+        padding: 10px 14px;
+        background: #fff;
+        border-bottom: 1px solid var(--line);
+      }
+      .place-item { padding: 10px 0; }
+      .place-links a {
+        display: inline-flex;
+        min-height: 30px;
+        align-items: center;
+        padding: 3px 7px;
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        background: #fff;
+      }
     }
     @media print {
       .site-header, .side-panel, .edit-note { display: none !important; }
@@ -615,10 +673,6 @@
         <a href="#tips">避坑</a>
       </div>
       <div class="tools">
-        <button class="primary" id="editBtn" type="button">编辑页面</button>
-        <button id="saveBtn" type="button">保存</button>
-        <button id="downloadMdBtn" type="button">下载 Markdown</button>
-        <button id="resetBtn" type="button">恢复</button>
         <button id="printBtn" type="button">打印/PDF</button>
       </div>
     </nav>
@@ -713,8 +767,6 @@
       <a href="#sources">参考来源</a>
     </aside>
   </main>
-
-  <div class="edit-note" id="editNote">编辑模式已开启。直接点击页面文字修改，完成后点“保存”。</div>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script>
@@ -1160,15 +1212,7 @@
       drawRoute(button.dataset.route);
     });
 
-    const STORAGE_KEY = "jeju-website-html-v2";
-    const editBtn = document.getElementById("editBtn");
-    const saveBtn = document.getElementById("saveBtn");
-    const downloadMdBtn = document.getElementById("downloadMdBtn");
-    const resetBtn = document.getElementById("resetBtn");
     const printBtn = document.getElementById("printBtn");
-    const editNote = document.getElementById("editNote");
-    const editableBlocks = Array.from(document.querySelectorAll(".editable"));
-    const initialState = editableBlocks.map(el => el.innerHTML);
     const sectionAliases = [
       ["4. 6/30 东线", "east"],
       ["5. 7/1 西线", "west"],
@@ -1184,114 +1228,8 @@
         if (match) h2.closest(".guide-section").id = match[1];
       });
     }
-    function setEditing(on) {
-      editableBlocks.forEach(el => el.contentEditable = on ? "true" : "false");
-      editBtn.textContent = on ? "退出编辑" : "编辑页面";
-      editNote.classList.toggle("show", on);
-    }
-    function save() {
-      const state = editableBlocks.map(el => el.innerHTML);
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-      setEditing(false);
-      saveBtn.textContent = "已保存";
-      setTimeout(() => saveBtn.textContent = "保存", 1200);
-    }
-    function reset() {
-      if (!confirm("确定恢复初始网页内容？当前浏览器保存的修改会被清除。")) return;
-      localStorage.removeItem(STORAGE_KEY);
-      editableBlocks.forEach((el, idx) => el.innerHTML = initialState[idx]);
-      assignAnchors();
-      setEditing(false);
-    }
-    function restore() {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (!raw) return;
-      try {
-        const state = JSON.parse(raw);
-        editableBlocks.forEach((el, idx) => {
-          if (typeof state[idx] === "string") el.innerHTML = state[idx];
-        });
-      } catch {}
-    }
-    function inlineMarkdown(node) {
-      if (node.nodeType === Node.TEXT_NODE) return node.textContent.replace(/\s+/g, " ");
-      if (node.nodeType !== Node.ELEMENT_NODE) return "";
-      const tag = node.tagName.toLowerCase();
-      const text = Array.from(node.childNodes).map(inlineMarkdown).join("");
-      if (tag === "strong" || tag === "b") return "**" + text.trim() + "**";
-      if (tag === "code") return "`" + text.trim() + "`";
-      if (tag === "a") {
-        const href = node.getAttribute("href") || "";
-        const label = text.trim() || href;
-        return href && href === label ? "<" + href + ">" : "[" + label + "](" + href + ")";
-      }
-      return text;
-    }
-    function blockText(node) {
-      return Array.from(node.childNodes).map(inlineMarkdown).join("").replace(/\s+/g, " ").trim();
-    }
-    function tableToMarkdown(table) {
-      const rows = Array.from(table.querySelectorAll("tr")).map(row =>
-        Array.from(row.children).map(cell => blockText(cell).replace(/\|/g, "\\|"))
-      );
-      if (!rows.length) return "";
-      const widths = rows[0].map((_, index) => Math.max(3, ...rows.map(row => (row[index] || "").length)));
-      const formatRow = row => "| " + widths.map((width, index) => (row[index] || "").padEnd(width, " ")).join(" | ") + " |";
-      return [formatRow(rows[0]), "| " + widths.map(width => "-".repeat(width)).join(" | ") + " |", ...rows.slice(1).map(formatRow)].join("\n");
-    }
-    function guideToMarkdown() {
-      const guide = document.getElementById("guide");
-      const lines = [];
-      function walk(node) {
-        if (node.nodeType !== Node.ELEMENT_NODE) return;
-        const tag = node.tagName.toLowerCase();
-        if (/^h[1-3]$/.test(tag)) {
-          lines.push("#".repeat(Number(tag[1])) + " " + blockText(node), "");
-          return;
-        }
-        if (tag === "p") {
-          const text = blockText(node);
-          if (text) lines.push(text, "");
-          return;
-        }
-        if (tag === "ul") {
-          Array.from(node.children).forEach(li => {
-            if (li.tagName.toLowerCase() === "li") lines.push("- " + blockText(li));
-          });
-          lines.push("");
-          return;
-        }
-        if (tag === "table") {
-          const table = tableToMarkdown(node);
-          if (table) lines.push(table, "");
-          return;
-        }
-        Array.from(node.children).forEach(walk);
-      }
-      Array.from(guide.children).forEach(walk);
-      return lines.join("\n").replace(/\n{3,}/g, "\n\n").trim() + "\n";
-    }
-    function downloadMarkdown() {
-      const blob = new Blob([guideToMarkdown()], { type: "text/markdown;charset=utf-8" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = "济州岛旅行攻略.md";
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      URL.revokeObjectURL(url);
-      downloadMdBtn.textContent = "已下载";
-      setTimeout(() => downloadMdBtn.textContent = "下载 Markdown", 1200);
-    }
-    editBtn.addEventListener("click", () => setEditing(editableBlocks[0].contentEditable !== "true"));
-    saveBtn.addEventListener("click", save);
-    downloadMdBtn.addEventListener("click", downloadMarkdown);
-    resetBtn.addEventListener("click", reset);
     printBtn.addEventListener("click", () => window.print());
-    restore();
     assignAnchors();
-    setEditing(false);
     renderDayPlan("arrival");
     initMap();
   </script>
